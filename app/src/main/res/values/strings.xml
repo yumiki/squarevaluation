@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Square</string>
+    <string name="edit_app_settings_content_description">Edit app settings</string>
 </resources>
