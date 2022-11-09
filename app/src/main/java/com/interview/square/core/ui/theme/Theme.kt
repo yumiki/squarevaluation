@@ -1,4 +1,4 @@
-package com.interview.square.ui.theme
+package com.interview.square.core.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
