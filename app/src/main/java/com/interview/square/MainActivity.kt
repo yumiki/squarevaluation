@@ -21,11 +21,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 class MainActivity : ComponentActivity() {
-    private val themeManager = ThemeManager(
-        this,
-        ThemeRepository(),
-        CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    )
+    private val themeManager by lazy {
+        ThemeManager(
+            this,
+            ThemeRepository(),
+            CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

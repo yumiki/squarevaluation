@@ -49,6 +49,7 @@ class ThemeManager(
 
     override val currentColorScheme: StateFlow<ColorScheme> =
         combine(isDarkThemeActive, currentTheme) { darkTheme, theme ->
+            Log.v("ThemeManager(current)", "$darkTheme, $theme")
             when (theme) {
                 ThemeType.Dynamic -> {
                     if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
@@ -60,7 +61,7 @@ class ThemeManager(
             }
         }.stateIn(
             externalScope,
-            SharingStarted.WhileSubscribed(),
+            SharingStarted.Eagerly,
             if (isDarkThemeActive.value) DarkColorScheme else LightColorScheme
         )
 

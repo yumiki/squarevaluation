@@ -52,7 +52,6 @@ fun SquareMovementScreen(
     val activity = (LocalContext.current as? Activity)
     val themeManager = LocalThemeManager.current
 
-
     val square by viewModel.square.collectAsState()
     val history by viewModel.positionHistory.collectAsState()
     val currentTheme by themeManager.currentTheme.collectAsState(initial = LocalThemeManager.current.defaultTheme)
@@ -201,7 +200,6 @@ fun SquareMovementScreen(
 
 @Composable
 fun ColorPicker(value: Color, onColorSelected: (Color) -> Unit) {
-    TODO("Not yet implemented")
 }
 
 @Composable
