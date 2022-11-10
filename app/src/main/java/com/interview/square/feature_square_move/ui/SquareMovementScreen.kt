@@ -2,41 +2,60 @@ package com.interview.square.feature_square_move.ui
 
 import android.app.Activity
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.interview.square.DEFAULT_SQUARE_SIZE_IN_PIXEL
 import com.interview.square.R
+import com.interview.square.core.data.service.LocalThemeManager
+import com.interview.square.core.domain.model.*
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.interview.square.core.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SquareMovementScreen(viewModel: ISquareMovementViewModel = viewModel<SquareViewModel>()) {
+fun SquareMovementScreen(
+    viewModel: ISquareMovementViewModel = viewModel<SquareViewModel>(),
+) {
     val activity = (LocalContext.current as? Activity)
+    val themeManager = LocalThemeManager.current
+
 
     val square by viewModel.square.collectAsState()
     val history by viewModel.positionHistory.collectAsState()
+    val currentTheme by themeManager.currentTheme.collectAsState(initial = LocalThemeManager.current.defaultTheme)
+
+    var settingDialogIsVisible by rememberSaveable { mutableStateOf(false) }
 
     val systemUiController = rememberSystemUiController()
 
@@ -53,11 +72,24 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel = viewModel<SquareV
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            FloatingActionButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = stringResource(id = R.string.edit_app_settings_content_description)
-                )
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                SmallFloatingActionButton(onClick = {
+                    viewModel.putInTheMiddle()
+                },
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.8f)
+                ) {
+                    Icon(imageVector = Icons.Default.Refresh, contentDescription = "Put in the middle")
+                }
+                FloatingActionButton(onClick = {
+                    settingDialogIsVisible = true
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = stringResource(id = R.string.edit_app_settings_content_description)
+                    )
+                }
             }
         }
     ) { padding ->
@@ -93,6 +125,68 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel = viewModel<SquareV
         }
 
 
+    }
+
+    AnimatedVisibility(settingDialogIsVisible) {
+        AlertDialog(onDismissRequest = {
+            settingDialogIsVisible = false
+        }, text = {
+            val squareSize by remember(square) {
+                derivedStateOf {
+                    square.size
+                }
+            }
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text("Square properties", style = MaterialTheme.typography.titleLarge)
+                Divider()
+                Text(text = "Change size")
+                Slider(value = squareSize.toFloat(), onValueChange = {
+                    viewModel.updateSquareSize(it.roundToInt())
+                }, steps = 25, valueRange = DEFAULT_SQUARE_SIZE_IN_PIXEL.toFloat()..200f)
+                Divider()
+                Box(Modifier.fillMaxWidth()) {
+                    Button(modifier = Modifier.align(Alignment.Center), onClick = {
+                        viewModel.putInTheMiddle()
+                    }) {
+                        Text(text = "Put in the middle")
+                    }
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+                Text("Change theme", style = MaterialTheme.typography.titleLarge)
+                Divider()
+                LazyRow {
+                    items(items = themeManager.availableThemes.toList(), key= {
+                        it
+                    }) { themeType ->
+                        val shape = when (themeManager.availableThemes.indexOf(themeType)) {
+                            0 -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
+                            themeManager.availableThemes.size - 1 -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
+                            else -> RoundedCornerShape(0)
+                        }
+
+                        if (currentTheme == themeType) {
+                            Button(onClick = {}, shape = shape) {
+                                Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        } else {
+                            OutlinedButton(onClick = {
+                                themeManager.setTheme(themeType)
+                            }, shape = shape) {
+                                Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            }
+        }, title = {
+            Text(text = "Settings")
+        }, confirmButton = {
+            TextButton(onClick = {
+                settingDialogIsVisible = false
+            }) {
+                Text(text = "Close")
+            }
+        })
     }
 }
 

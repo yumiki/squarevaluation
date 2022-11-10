@@ -9,7 +9,7 @@ sealed class Square(open val size: Int, open val currentPosition: Position) {
     @Parcelize
     data class TwoDimensionSquare(
         override val size: Int,
-        override val currentPosition: TwoDimensionPosition
+        override val currentPosition: TwoDimensionPosition = TwoDimensionPosition(0, 0)
     ) : Square(size, currentPosition), Parcelable
 }
 
