@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.interview.square.core.domain.service.ThemeType
 
-private val DarkColorScheme = darkColorScheme(
+val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
-private val LightColorScheme = lightColorScheme(
+val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40
@@ -28,26 +28,13 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-private val UserColorScheme = LightColorScheme
+val UserColorScheme = LightColorScheme
 
 @Composable
 fun SquareTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    currentTheme: ThemeType = ThemeType.Default,
+    colorScheme: ColorScheme = LightColorScheme,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when(currentTheme) {
-        ThemeType.Dynamic -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        ThemeType.Default -> {
-            if (darkTheme) DarkColorScheme else LightColorScheme
-        }
-        ThemeType.User -> UserColorScheme
-    }
-
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

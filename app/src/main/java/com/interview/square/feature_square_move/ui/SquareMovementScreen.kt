@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +38,7 @@ import com.interview.square.DEFAULT_SQUARE_SIZE_IN_PIXEL
 import com.interview.square.R
 import com.interview.square.core.data.service.LocalThemeManager
 import com.interview.square.core.domain.model.*
+import com.interview.square.core.domain.service.ThemeType
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
@@ -158,23 +160,30 @@ fun SquareMovementScreen(
                     items(items = themeManager.availableThemes.toList(), key= {
                         it
                     }) { themeType ->
-                        val shape = when (themeManager.availableThemes.indexOf(themeType)) {
+                        val isSelectedTheme = currentTheme == themeType
+                        val index = themeManager.availableThemes.indexOf(themeType)
+                        val shape = when (index) {
                             0 -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
                             themeManager.availableThemes.size - 1 -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
                             else -> RoundedCornerShape(0)
                         }
-
-                        if (currentTheme == themeType) {
-                            Button(onClick = {}, shape = shape) {
-                                Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        } else {
-                            OutlinedButton(onClick = {
+                        OutlinedButton(
+                            modifier = Modifier.offset((-1 * index).dp, 0.dp),
+                            onClick = {
                                 themeManager.setTheme(themeType)
-                            }, shape = shape) {
-                                Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
+                            },
+                            shape = shape,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (isSelectedTheme) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
+                            )
+                        ) {
+                            Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
+                    }
+                }
+                AnimatedVisibility(visible = currentTheme == ThemeType.User) {
+                    ColorPicker(MaterialTheme.colorScheme.primary) {
+                        themeManager.setPrimaryColorForUserTheme(it.toAppColor())
                     }
                 }
             }
@@ -188,6 +197,11 @@ fun SquareMovementScreen(
             }
         })
     }
+}
+
+@Composable
+fun ColorPicker(value: Color, onColorSelected: (Color) -> Unit) {
+    TODO("Not yet implemented")
 }
 
 @Composable
