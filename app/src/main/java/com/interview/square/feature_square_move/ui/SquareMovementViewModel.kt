@@ -1,51 +1,62 @@
 package com.interview.square.feature_square_move.ui
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.interview.square.core.domain.model.Bounds
-import com.interview.square.core.domain.model.Position
-import com.interview.square.core.domain.model.PositionHistory
-import com.interview.square.core.domain.model.Square
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.interview.square.core.domain.model.*
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
 
-class SquareViewModel : ISquareMovementViewModel, ViewModel() {
-    private val _square = MutableStateFlow(Square.TwoDimensionSquare(70, Position.TwoDimensionPosition(0, 0)))
-    override val square: StateFlow<Square> = _square.asStateFlow()
-    private val _bounds = MutableStateFlow(Bounds(0,0, 0, 0))
-    override val bounds: StateFlow<Bounds> = _bounds.asStateFlow()
-    private val _positionHistory = MutableStateFlow(emptyList<PositionHistory>())
-    override val positionHistory: StateFlow<List<PositionHistory>> = _positionHistory.asStateFlow()
+class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareMovementViewModel,
+    ViewModel() {
+    override val square: StateFlow<Square> = savedStateHandle.getStateFlow(
+        "square",
+        Square.TwoDimensionSquare(70, TwoDimensionPosition(0, 0))
+    )
+    override val bounds: StateFlow<Bounds> = savedStateHandle.getStateFlow(
+        "bounds",
+        Bounds(0, 0, 0, 0)
+    )
+    override val positionHistory: StateFlow<List<PositionHistory>> = savedStateHandle.getStateFlow(
+        "history",
+        emptyList()
+    )
 
-    override fun updateSquarePosition(newPosition: Position) {
+    override fun updateSquarePosition(newPosition: Position, initialPosition: Boolean) {
         val currentPosition = square.value.currentPosition
         val updatedPosition = constraintToBounds(newPosition)
-
-        _positionHistory.update {
-            it.plus(PositionHistory(updatedPosition))
-        }
 
         if (currentPosition == updatedPosition) {
             return
         }
 
-        when(square.value) {
-            is Square.TwoDimensionSquare -> _square.value = _square.value.copy(currentPosition = updatedPosition as Position.TwoDimensionPosition)
+        if (initialPosition && positionHistory.value.isNotEmpty()) {
+            val rotationPosition = constraintToBounds(when(currentPosition) {
+                is TwoDimensionPosition -> TwoDimensionPosition(currentPosition.y, currentPosition.x)
+                else -> currentPosition
+            })
+            savedStateHandle["history"] = positionHistory.value.plus(PositionHistory(rotationPosition))
+            return
         }
+
+        when (val square = square.value) {
+            is Square.TwoDimensionSquare -> savedStateHandle["square"] =
+                square.copy(currentPosition = updatedPosition as TwoDimensionPosition)
+        }
+
+        savedStateHandle["history"] = positionHistory.value.plus(PositionHistory(updatedPosition))
     }
 
-    private fun constraintToBounds(newPosition: Position): Position = when(newPosition) {
-        is Position.TwoDimensionPosition -> Position.TwoDimensionPosition(
+    private fun constraintToBounds(newPosition: Position): Position = when (newPosition) {
+        is TwoDimensionPosition -> TwoDimensionPosition(
             maxOf(bounds.value.minX, minOf(newPosition.x, bounds.value.maxX)),
             maxOf(bounds.value.minY, minOf(newPosition.y, bounds.value.maxY))
         )
+        else -> newPosition
     }
 
 
     override fun setBounds(bounds: Bounds) {
-        _bounds.value = bounds.copy(
+        savedStateHandle["bounds"] = bounds.copy(
             minX = maxOf(0, bounds.minX - square.value.size),
             maxX = bounds.maxX - square.value.size,
             minY = maxOf(0, bounds.minY - square.value.size),
@@ -60,6 +71,6 @@ interface ISquareMovementViewModel {
 
     val positionHistory: StateFlow<List<PositionHistory>>
 
-    fun updateSquarePosition(newPosition: Position)
+    fun updateSquarePosition(newPosition: Position, initialPosition: Boolean = false)
     fun setBounds(bounds: Bounds)
 }
