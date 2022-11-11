@@ -2,11 +2,23 @@ package com.interview.square.feature_square_move.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import com.interview.square.core.domain.model.*
+import com.interview.square.feature_position_history.domain.IPositionHistoryRepository
 import kotlinx.coroutines.flow.StateFlow
+import java.util.UUID
 
-class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareMovementViewModel,
+class SquareViewModel(
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: IPositionHistoryRepository
+) : ISquareMovementViewModel,
     ViewModel() {
+    @OptIn(SavedStateHandleSaveableApi::class)
+    private val recordId = savedStateHandle.saveable("recordId") {
+        UUID.randomUUID().toString()
+    }
+
     override val square: StateFlow<Square> = savedStateHandle.getStateFlow(
         "square",
         Square.TwoDimensionSquare(70, TwoDimensionPosition(0, 0))
@@ -33,7 +45,7 @@ class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareM
                 is TwoDimensionPosition -> TwoDimensionPosition(currentPosition.y, currentPosition.x)
                 else -> currentPosition
             })
-            savedStateHandle["history"] = positionHistory.value.plus(PositionHistory(rotationPosition))
+            recordPosition(positionHistory.value.plus(PositionHistory(rotationPosition)))
             return
         }
 
@@ -41,8 +53,13 @@ class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareM
             is Square.TwoDimensionSquare -> savedStateHandle["square"] =
                 square.copy(currentPosition = updatedPosition as TwoDimensionPosition)
         }
+        recordPosition(positionHistory.value.plus(PositionHistory(updatedPosition)))
 
-        savedStateHandle["history"] = positionHistory.value.plus(PositionHistory(updatedPosition))
+    }
+
+    private fun recordPosition(positions: List<PositionHistory>) {
+        repository.persistRecord(PositionRecord(recordId, positions))
+        savedStateHandle["history"] = positions
     }
 
     private fun constraintToBounds(newPosition: Position): Position = when (newPosition) {

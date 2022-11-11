@@ -30,3 +30,5 @@ data class PositionHistory(
         }
     }
 }
+
+data class PositionRecord(val id: String, val positions: List<PositionHistory>)
