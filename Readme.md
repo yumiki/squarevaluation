@@ -54,9 +54,8 @@ Possible improvement:
 - Relocate and reorganize all the mappers, they should not be inside domain layer
 - Create libraries to improve the modulability of the app
 - Improve current position display 
-- Inject theme manager
+- Inject ThemeManager
 - Make home screen floating elements like PositionHistoryCard and floating buttons move when the square is on them 
 
-# Screenshot
-![Move the square and display last position](screenshots/home_screen.png "Home screen")
-
+# Screenshots
+<img src="screenshots/home_screen.png" width="320"> <img src="screenshots/settings_dialog.png" width="320"> <img src="screenshots/history_screen.png" width="320">
