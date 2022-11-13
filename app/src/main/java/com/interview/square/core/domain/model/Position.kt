@@ -1,6 +1,7 @@
 package com.interview.square.core.domain.model
 
 import android.os.Parcelable
+import com.interview.square.DATETIME_DEFAULT_FORMAT
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.text.DateFormat
@@ -19,7 +20,7 @@ data class PositionHistory(
 ) : Parcelable {
 
     @IgnoredOnParcel
-    private val sdf = SimpleDateFormat("hh:mm:ss.SSS", Locale.getDefault())
+    private val sdf = SimpleDateFormat(DATETIME_DEFAULT_FORMAT, Locale.getDefault())
 
     fun getFormattedDate(format: DateFormat = sdf): String = format.format(Date(timestamp))
 

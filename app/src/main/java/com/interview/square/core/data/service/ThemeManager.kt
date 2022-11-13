@@ -22,10 +22,6 @@ class ThemeManager(
     private val themeRepository: IThemeRepository,
     private val externalScope: CoroutineScope
 ) : IThemeManager {
-    init {
-        Log.v("ThemeManager", "new instance $this")
-    }
-
     private val _isDarkThemeActive =
         MutableStateFlow(context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
     override val isDarkThemeActive: StateFlow<Boolean> = _isDarkThemeActive.asStateFlow()

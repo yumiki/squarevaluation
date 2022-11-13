@@ -3,6 +3,10 @@ package com.interview.square.core.domain.model
 import androidx.compose.material3.ColorScheme
 import kotlinx.serialization.Serializable
 
+/**
+ * Class to avoid using directly android libraries, helpful in case where we need to make a multiplaform library
+ * //TODO remove the mappers !
+ */
 @Serializable
 data class AppColorScheme(
     val primary: AppColor,

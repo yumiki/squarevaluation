@@ -7,13 +7,3 @@ interface IThemeRepository {
     suspend fun updatePrimaryUserColorScheme(color: AppColor, variantColor: AppColor?)
     suspend fun getUserColorScheme(): AppColorScheme
 }
-
-object StubThemeRepository: IThemeRepository {
-    override suspend fun updatePrimaryUserColorScheme(color: AppColor, variantColor: AppColor?) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getUserColorScheme(): AppColorScheme {
-        TODO("Not yet implemented")
-    }
-}
