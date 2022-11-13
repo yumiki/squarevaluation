@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -61,6 +61,15 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(
                                 Screen.History.buildRouteWithArgs(),
+                                enterTransition = {
+                                    expandVertically() + slideInVertically() + scaleIn()
+                                },
+                                exitTransition = {
+                                     shrinkVertically() + slideOutVertically() + scaleOut()
+                                },
+                                popExitTransition = {
+                                    shrinkVertically() + slideOutVertically() + scaleOut()
+                                },
                                 arguments = Screen.History.args
                             ) {
                                 PositionHistoryScreen {
