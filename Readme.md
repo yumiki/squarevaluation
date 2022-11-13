@@ -52,7 +52,7 @@ Inside core and features packages, we got the 3 clean architecture layers:
 # Improvement 
 Possible improvement:
 - Relocate and reorganize all the mappers, they should not be inside domain layer
-- Create libraries to improve the modulability of the app
+- Create libraries to improve the modularity of the app
 - Improve current position display 
 - Inject ThemeManager
 - Make home screen floating elements like PositionHistoryCard and floating buttons move when the square is on them 
