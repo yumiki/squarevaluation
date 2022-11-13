@@ -15,7 +15,7 @@ class SquareViewModel(
 ) : ISquareMovementViewModel,
     ViewModel() {
     @OptIn(SavedStateHandleSaveableApi::class)
-    private val recordId = savedStateHandle.saveable("recordId") {
+    override val recordId = savedStateHandle.saveable("recordId") {
         UUID.randomUUID().toString()
     }
 
@@ -95,6 +95,7 @@ class SquareViewModel(
 }
 
 interface ISquareMovementViewModel {
+    val recordId: String
     val square: StateFlow<Square>
     val bounds: StateFlow<Bounds>
 

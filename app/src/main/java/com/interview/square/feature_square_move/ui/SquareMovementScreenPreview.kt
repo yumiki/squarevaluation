@@ -17,6 +17,7 @@ fun SquareMovementScreenPreview() {
             private val _square =  MutableStateFlow(
                 Square.TwoDimensionSquare(DEFAULT_SQUARE_SIZE_IN_PIXEL)
             )
+            override val recordId: String = "1"
             override val square: StateFlow<Square> = _square.asStateFlow()
             private val _bounds = MutableStateFlow(Bounds(0,0,0,0))
             override val bounds: StateFlow<Bounds> = _bounds.asStateFlow()
@@ -44,6 +45,8 @@ fun SquareMovementScreenPreview() {
                 TODO("Not yet implemented")
             }
 
-        })
+        }) {
+
+        }
     }
 }
