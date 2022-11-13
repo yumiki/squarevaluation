@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import com.interview.square.core.domain.model.*
 import kotlinx.coroutines.flow.StateFlow
 
-
 class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareMovementViewModel,
     ViewModel() {
     override val square: StateFlow<Square> = savedStateHandle.getStateFlow(
@@ -63,6 +62,19 @@ class SquareViewModel(private val savedStateHandle: SavedStateHandle) : ISquareM
             maxY = bounds.maxY - square.value.size
         )
     }
+
+    override fun putInTheMiddle() {
+        when(square.value) {
+            is Square.TwoDimensionSquare -> updateSquarePosition(TwoDimensionPosition(bounds.value.maxX/2, bounds.value.maxY/2))
+        }
+    }
+
+    override fun updateSquareSize(newSize: Int) {
+        when (val square = square.value) {
+            is Square.TwoDimensionSquare -> savedStateHandle["square"] =
+                square.copy(size = newSize)
+        }
+    }
 }
 
 interface ISquareMovementViewModel {
@@ -73,4 +85,6 @@ interface ISquareMovementViewModel {
 
     fun updateSquarePosition(newPosition: Position, initialPosition: Boolean = false)
     fun setBounds(bounds: Bounds)
+    fun putInTheMiddle()
+    fun updateSquareSize(newSize: Int)
 }
