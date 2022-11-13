@@ -1,25 +1,33 @@
 package com.interview.square.feature_square_move.ui
 
 import android.app.Activity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.interview.square.R
 import com.interview.square.core.domain.model.Bounds
 import com.interview.square.core.domain.model.Position
+import com.interview.square.core.domain.model.PositionHistory
 import com.interview.square.core.domain.model.Square
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +36,7 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel) {
     val activity = (LocalContext.current as? Activity)
 
     val square by viewModel.square.collectAsState()
+    val history by viewModel.positionHistory.collectAsState()
 
     val systemUiController = rememberSystemUiController()
 
@@ -41,7 +50,19 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel) {
         onDispose {}
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            FloatingActionButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = stringResource(id = R.string.edit_app_settings_content_description)
+                )
+            }
+        }
+    ) { padding ->
+        PositionHistoryCard(history = history)
+
         BoxWithConstraints(
             modifier = Modifier
                 .padding(padding)
@@ -62,19 +83,15 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel) {
                 when (it) {
                     is Position.TwoDimensionPosition -> viewModel.updateSquarePosition(
                         Position.TwoDimensionPosition(
-                            minOf(
-                                (square.currentPosition as Position.TwoDimensionPosition).x + it.x,
-                                maxWidth.toPx
-                            ),
-                            minOf(
-                                (square.currentPosition as Position.TwoDimensionPosition).y + it.y,
-                                maxHeight.toPx
-                            )
+                            (square.currentPosition as Position.TwoDimensionPosition).x + it.x,
+                            (square.currentPosition as Position.TwoDimensionPosition).y + it.y
                         )
                     )
                 }
             }
         }
+
+
     }
 }
 
@@ -115,4 +132,38 @@ fun SquareComponent(
             }
         }
     )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PositionHistoryCard(
+    history: List<PositionHistory>
+) {
+    val listState = rememberLazyListState()
+    // Remember a CoroutineScope to be able to launch
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(key1 = history) {
+        coroutineScope.launch {
+            if (history.isNotEmpty()) {
+                listState.animateScrollToItem(history.lastIndex)
+            }
+        }
+    }
+
+    Card(
+        Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .heightIn(max = 300.dp)
+            .displayCutoutPadding(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
+    ) {
+        LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
+            items(history.size) { index ->
+                val positionRecord = history[index]
+                Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+            }
+        }
+    }
 }
