@@ -1,4 +1,4 @@
-package com.interview.square.ui.theme
+package com.interview.square.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

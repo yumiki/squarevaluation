@@ -1,4 +1,4 @@
-package com.interview.square.ui.theme
+package com.interview.square.core.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
