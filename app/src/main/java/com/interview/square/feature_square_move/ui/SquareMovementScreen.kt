@@ -53,6 +53,7 @@ import kotlin.math.roundToInt
 @Composable
 fun SquareMovementScreen(
     viewModel: ISquareMovementViewModel = getViewModel<SquareViewModel>(),
+    navigateToHistoryScreen: (String) -> Unit
 ) {
     val activity = (LocalContext.current as? Activity)
     val themeManager = LocalThemeManager.current
@@ -106,7 +107,7 @@ fun SquareMovementScreen(
     ) { padding ->
         if (history.isNotEmpty()) {
             PositionHistoryCard(history = history) {
-
+                navigateToHistoryScreen(viewModel.recordId)
             }
         }
 
