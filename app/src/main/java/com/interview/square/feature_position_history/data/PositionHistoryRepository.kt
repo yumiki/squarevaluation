@@ -8,7 +8,7 @@ class PositionHistoryRepository: IPositionHistoryRepository {
     private val records = mutableMapOf<String, PositionRecord>()
 
     override fun persistRecord(record: PositionRecord) {
-        records[record.id]
+        records[record.id] = record
     }
 
     override fun getRecord(id: String): PositionRecord? = records[id]

@@ -4,11 +4,10 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,6 +19,7 @@ import com.interview.square.core.data.repository.ThemeRepository
 import com.interview.square.core.data.service.LocalThemeManager
 import com.interview.square.core.data.service.ThemeManager
 import com.interview.square.core.ui.theme.SquareTheme
+import com.interview.square.feature_position_history.ui.PositionHistoryScreen
 import com.interview.square.feature_square_move.ui.SquareMovementScreen
 import com.interview.square.screens.Screen
 import kotlinx.coroutines.CoroutineScope
@@ -61,9 +61,20 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(
                                 Screen.History.buildRouteWithArgs(),
+                                enterTransition = {
+                                    expandVertically() + slideInVertically() + scaleIn()
+                                },
+                                exitTransition = {
+                                     shrinkVertically() + slideOutVertically() + scaleOut()
+                                },
+                                popExitTransition = {
+                                    shrinkVertically() + slideOutVertically() + scaleOut()
+                                },
                                 arguments = Screen.History.args
                             ) {
-                                Text(text = "History")
+                                PositionHistoryScreen {
+                                    navController.popBackStack()
+                                }
                             }
                         }
                     }

@@ -74,7 +74,12 @@ fun SquareMovementScreen(
         systemUiController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         systemUiController.isSystemBarsVisible = false
-        onDispose {}
+        onDispose {
+            activity?.window?.run {
+                WindowCompat.setDecorFitsSystemWindows(this, true)
+            }
+            systemUiController.isSystemBarsVisible = true
+        }
     }
 
     Scaffold(
