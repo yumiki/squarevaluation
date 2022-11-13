@@ -3,6 +3,10 @@ package com.interview.square.core.domain.model
 import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.Serializable
 
+/**
+ * Class to avoid using directly android libraries, helpful in case where we need to make a multiplaform library
+ * //TODO remove the mappers !
+ */
 @Serializable
 data class AppColor(
     val red: Float,

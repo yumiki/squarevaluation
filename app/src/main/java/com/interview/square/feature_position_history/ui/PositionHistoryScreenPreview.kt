@@ -15,7 +15,7 @@ fun PositionHistoryScreenPreview() {
     SquareTheme {
         PositionHistoryScreen(object : IPositionHistoryViewModel {
             override val history: StateFlow<List<PositionHistory>> = MutableStateFlow(
-                List(10) {
+                List(100) {
                     PositionHistory(TwoDimensionPosition(it, it),Date().time + it)
                 }
             )

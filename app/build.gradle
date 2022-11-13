@@ -60,21 +60,25 @@ dependencies {
     implementation "androidx.compose.ui:ui-util:$compose_version"
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha03'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+
+    //Koin
     // Koin Core features
     implementation "io.insert-koin:koin-core:$koin_version"
-
     // Koin main features for Android
     implementation "io.insert-koin:koin-android:$koin_android_version"
     // Java Compatibility
     implementation "io.insert-koin:koin-android-compat:$koin_android_version"
-
     // Jetpack Compose
     implementation "io.insert-koin:koin-androidx-compose:$koin_android_compose_version"
 
     //Color Picker
     implementation 'com.godaddy.android.colorpicker:compose-color-picker:0.5.1'
+
+    //Icons
     implementation 'androidx.compose.material:material-icons-core:1.4.0-alpha02'
     implementation "androidx.compose.material:material-icons-extended:1.3.1"
+
+    //Navigation
     implementation 'com.google.accompanist:accompanist-navigation-animation:0.27.0'
 
     testImplementation 'junit:junit:4.13.2'

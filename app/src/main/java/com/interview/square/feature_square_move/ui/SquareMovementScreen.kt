@@ -1,432 +1,110 @@
 package com.interview.square.feature_square_move.ui
 
-import android.app.Activity
-import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.godaddy.android.colorpicker.harmony.ColorHarmonyMode
-import com.godaddy.android.colorpicker.harmony.HarmonyColorPicker
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.interview.square.DEFAULT_SQUARE_SIZE_IN_PIXEL
 import com.interview.square.R
-import com.interview.square.core.data.service.LocalThemeManager
 import com.interview.square.core.domain.model.*
-import com.interview.square.core.domain.service.ThemeType
-import com.interview.square.core.ui.AnimatedNumberFields
-import com.interview.square.extensions.toDp
+import com.interview.square.core.ui.FullScreenComponent
 import com.interview.square.extensions.toPx
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SquareMovementScreen(
     viewModel: ISquareMovementViewModel = getViewModel<SquareViewModel>(),
     navigateToHistoryScreen: (String) -> Unit
 ) {
-    val activity = (LocalContext.current as? Activity)
-    val themeManager = LocalThemeManager.current
-    val coroutineScope = rememberCoroutineScope()
-
     val square by viewModel.square.collectAsState()
     val history by viewModel.positionHistory.collectAsState()
-    val currentTheme by themeManager.currentTheme.collectAsState(initial = LocalThemeManager.current.defaultTheme)
 
     var settingDialogIsVisible by rememberSaveable { mutableStateOf(false) }
 
-    val systemUiController = rememberSystemUiController()
-
-    DisposableEffect(true) {
-        activity?.window?.run {
-            WindowCompat.setDecorFitsSystemWindows(this, false)
-        }
-        systemUiController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        systemUiController.isSystemBarsVisible = false
-        onDispose {
-            activity?.window?.run {
-                WindowCompat.setDecorFitsSystemWindows(this, true)
-            }
-            systemUiController.isSystemBarsVisible = true
-        }
-    }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        floatingActionButton = {
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                SmallFloatingActionButton(
-                    onClick = {
-                        viewModel.putInTheMiddle()
-                    },
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.8f)
+    FullScreenComponent {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            floatingActionButton = {
+                Column(
+                    horizontalAlignment = Alignment.End
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Put in the middle"
-                    )
-                }
-                FloatingActionButton(onClick = {
-                    settingDialogIsVisible = true
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = stringResource(id = R.string.edit_app_settings_content_description)
-                    )
-                }
-            }
-        }
-    ) { padding ->
-        if (history.isNotEmpty()) {
-            PositionHistoryCard(history = history) {
-                navigateToHistoryScreen(viewModel.recordId)
-            }
-        }
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            LaunchedEffect(key1 = true) {
-                // Initialization block
-                viewModel.setBounds(Bounds(0, maxWidth.toPx, 0, maxHeight.toPx))
-                viewModel.updateSquarePosition(
-                    TwoDimensionPosition(
-                        maxWidth.div(2).toPx,
-                        maxHeight.div(2).toPx
-                    ),
-                    true
-                )
-            }
-
-            SquareComponent(square = square) {
-                when (it) {
-                    is TwoDimensionPosition -> viewModel.updateSquarePosition(
-                        TwoDimensionPosition(
-                            (square.currentPosition as TwoDimensionPosition).x + it.x,
-                            (square.currentPosition as TwoDimensionPosition).y + it.y
+                    SmallFloatingActionButton(
+                        onClick = {
+                            viewModel.putInTheMiddle()
+                        },
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.8f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Put in the middle"
                         )
-                    )
-                }
-            }
-        }
-
-
-    }
-
-    AnimatedVisibility(settingDialogIsVisible) {
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .wrapContentHeight(), onDismissRequest = {
-            settingDialogIsVisible = false
-        }, text = {
-            val squareSize by remember(square) {
-                derivedStateOf {
-                    square.size
-                }
-            }
-            Column(modifier = Modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Square properties", style = MaterialTheme.typography.titleLarge)
-                Divider()
-                Text(text = "Change size")
-                Slider(value = squareSize.toFloat(), onValueChange = {
-                    viewModel.updateSquareSize(it.roundToInt())
-                }, steps = 25, valueRange = DEFAULT_SQUARE_SIZE_IN_PIXEL.toFloat()..200f)
-                Divider()
-                Box(Modifier.fillMaxWidth()) {
-                    Button(modifier = Modifier.align(Alignment.Center), onClick = {
-                        viewModel.putInTheMiddle()
+                    }
+                    FloatingActionButton(onClick = {
+                        settingDialogIsVisible = true
                     }) {
-                        Text(text = "Put in the middle")
-                    }
-                }
-                Spacer(modifier = Modifier.size(16.dp))
-                Text("Change theme", style = MaterialTheme.typography.titleLarge)
-                Divider()
-                LazyRow {
-                    items(items = themeManager.availableThemes.toList(), key = {
-                        it
-                    }) { themeType ->
-                        val isSelectedTheme = currentTheme == themeType
-                        val index = themeManager.availableThemes.indexOf(themeType)
-                        val shape = when (index) {
-                            0 -> RoundedCornerShape(
-                                topStartPercent = 50,
-                                bottomStartPercent = 50
-                            )
-                            themeManager.availableThemes.size - 1 -> RoundedCornerShape(
-                                topEndPercent = 50,
-                                bottomEndPercent = 50
-                            )
-                            else -> RoundedCornerShape(0)
-                        }
-                        OutlinedButton(
-                            modifier = Modifier.offset((-1 * index).dp, 0.dp),
-                            onClick = {
-                                coroutineScope.launch {
-                                    themeManager.setTheme(themeType)
-                                }
-                            },
-                            shape = shape,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (isSelectedTheme) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
-                            )
-                        ) {
-                            if (isSelectedTheme) {
-                                Icon(imageVector = Icons.Default.Check , contentDescription = "Selected theme")
-                            }
-                            Text(
-                                text = themeType.name,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-                AnimatedVisibility(visible = currentTheme == ThemeType.User) {
-                    Column {
-                        ColorPicker { color, variants ->
-                            themeManager.setPrimaryColorForUserTheme(
-                                color.toAppColor(),
-                                variants.first().toAppColor()
-                            )
-                        }
-                        Row {
-                            Box(
-                                Modifier
-                                    .clip(CircleShape)
-                                    .size(28.dp)
-                                    .background(MaterialTheme.colorScheme.primary))
-                            Box(
-                                Modifier
-                                    .clip(CircleShape)
-                                    .size(28.dp)
-                                    .background(MaterialTheme.colorScheme.primaryContainer))
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(id = R.string.edit_app_settings_content_description)
+                        )
                     }
                 }
             }
-        }, title = {
-            Text(text = "Settings")
-        }, confirmButton = {
-            TextButton(onClick = {
-                settingDialogIsVisible = false
-            }) {
-                Text(text = "Close")
+        ) { padding ->
+            if (history.isNotEmpty()) {
+                PositionHistoryCard(history = history) {
+                    navigateToHistoryScreen(viewModel.recordId)
+                }
             }
-        })
-    }
-}
 
-@Composable
-fun ColorPicker(value: Color = MaterialTheme.colorScheme.primary, onColorSelected: (Color, List<Color>) -> Unit) {
-    HarmonyColorPicker(
-        modifier = Modifier.size(250.dp),
-        harmonyMode = ColorHarmonyMode.MONOCHROMATIC,
-        color = value
-    ) {
-        onColorSelected(it.toColor(), it.getMonochromaticColors().map { color -> color.toColor() })
-    }
-
-}
-
-@Composable
-fun SquareComponent(
-    modifier: Modifier = Modifier,
-    square: Square,
-    onDrag: (position: Position) -> Unit
-) {
-    val offsetX by remember(square) {
-        derivedStateOf {
-            (square.currentPosition as TwoDimensionPosition).x
-        }
-    }
-    val offsetY by remember(square) {
-        derivedStateOf {
-            (square.currentPosition as TwoDimensionPosition).y
-        }
-    }
-
-    Box(modifier = modifier
-        .offset {
-            IntOffset(offsetX, offsetY)
-        }
-        .size(square.size.toDp)
-        .clip(RoundedCornerShape(5.dp))
-        .background(MaterialTheme.colorScheme.primaryContainer)
-        .pointerInput(Unit) {
-            detectDragGestures { change, dragAmount ->
-                val x = dragAmount.x.roundToInt()
-                val y = dragAmount.y.roundToInt()
-                change.consume()
-                onDrag(
-                    TwoDimensionPosition(
-                        x = x,
-                        y = y
+            BoxWithConstraints(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                // Initialization block
+                LaunchedEffect(key1 = true) {
+                    viewModel.setBounds(Bounds(0, maxWidth.toPx, 0, maxHeight.toPx))
+                    viewModel.updateSquarePosition(
+                        TwoDimensionPosition(
+                            maxWidth.div(2).toPx,
+                            maxHeight.div(2).toPx
+                        ),
+                        true
                     )
-                )
+                }
+
+                SquareComponent(square = square) {
+                    when (it) {
+                        is TwoDimensionPosition -> viewModel.updateSquarePosition(
+                            TwoDimensionPosition(
+                                (square.currentPosition as TwoDimensionPosition).x + it.x,
+                                (square.currentPosition as TwoDimensionPosition).y + it.y
+                            )
+                        )
+                    }
+                }
             }
+        }
+    }
+
+    SettingsDialog(
+        visibility = settingDialogIsVisible,
+        square = square,
+        onDismiss = { settingDialogIsVisible = false },
+        onSliderValueChange = {
+            viewModel.updateSquareSize(it.roundToInt())
+        },
+        onResetSquarePositionRequest = {
+            viewModel.putInTheMiddle()
         }
     )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun PositionHistoryCard(
-    history: List<PositionHistory>,
-    compact: Boolean = true,
-    onClick: () -> Unit
-) {
-    val listState = rememberLazyListState()
-    // Remember a CoroutineScope to be able to launch
-    val coroutineScope = rememberCoroutineScope()
-
-    val lastMovement by remember(history) {
-        derivedStateOf {
-            history.last()
-        }
-    }
-
-    val lastPosition by remember(lastMovement) {
-        derivedStateOf {
-            history.last().position
-        }
-    }
-
-    val lastMovementDate by remember(lastMovement) {
-        derivedStateOf {
-            history.last().getFormattedDate()
-        }
-    }
-
-    LaunchedEffect(key1 = history) {
-        coroutineScope.launch {
-            if (history.isNotEmpty()) {
-                listState.animateScrollToItem(history.lastIndex)
-            }
-        }
-    }
-
-    val cardModifier =
-        Modifier
-            .run {
-                when (LocalConfiguration.current.orientation) {
-                    Configuration.ORIENTATION_LANDSCAPE -> {
-                        padding(top = 16.dp)
-                    }
-                    else -> {
-                        heightIn(max = 300.dp)
-                        displayCutoutPadding()
-                    }
-                }
-            }
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .clip(CardDefaults.shape)
-            .clickable {
-                onClick()
-            }
-
-    Card(
-        cardModifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                0.5f
-            )
-        )
-    ) {
-        if (compact) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row {
-                    val textAlignmentModifier = Modifier.alignByBaseline()
-                    Text(modifier = textAlignmentModifier, text = "Last movement at: ", style = MaterialTheme.typography.titleLarge)
-                    Text(modifier = textAlignmentModifier, text = lastMovementDate, style = MaterialTheme.typography.titleMedium)
-                }
-                Divider()
-                Text(
-                    text = "Current position :",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row {
-                    when(lastPosition) {
-                        is TwoDimensionPosition -> {
-                            val textAlignmentModifier = Modifier.alignByBaseline()
-                            Text(modifier = textAlignmentModifier, text = "x:", style = MaterialTheme.typography.titleMedium)
-                            AnimatedNumberFields(
-                                modifier = textAlignmentModifier,
-                                value = (lastPosition as TwoDimensionPosition).x,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(modifier = textAlignmentModifier,text = "y:", style = MaterialTheme.typography.titleMedium)
-                            AnimatedNumberFields(
-                                modifier = textAlignmentModifier,
-                                value = (lastPosition as TwoDimensionPosition).y,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-
-                }
-            }
-        } else {
-            LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
-                items(history.size) { index ->
-                    val positionRecord = history[index]
-                    Text(
-                        modifier = Modifier.animateItemPlacement(),
-                        text = positionRecord.toString()
-                    )
-                }
-            }
-        }
-        Divider()
-        TextButton(
-            modifier = Modifier.align(Alignment.End),
-            onClick = { onClick() }
-        ) {
-            Text(text = "Expand")
-        }
-    }
 }
