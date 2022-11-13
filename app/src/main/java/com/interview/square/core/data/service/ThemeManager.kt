@@ -11,6 +11,7 @@ import com.interview.square.core.domain.model.AppColor
 import com.interview.square.core.domain.repository.IThemeRepository
 import com.interview.square.core.domain.service.IThemeManager
 import com.interview.square.core.domain.service.ThemeType
+import com.interview.square.core.ui.theme.DarkColorScheme
 import com.interview.square.core.ui.theme.LightColorScheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -38,7 +39,7 @@ class ThemeManager(
                 context
             )
         }
-        else -> LightColorScheme
+        else -> if (_isDarkThemeActive.value) DarkColorScheme else LightColorScheme
     }
 
     private val _currentTheme = MutableSharedFlow<ThemeType>()
@@ -62,7 +63,7 @@ class ThemeManager(
                     )
                 }
                 ThemeType.User -> themeRepository.getUserColorScheme().toColorScheme()
-                else -> LightColorScheme
+                else -> if (darkTheme) DarkColorScheme else LightColorScheme
             }
         }.shareIn(
             externalScope,

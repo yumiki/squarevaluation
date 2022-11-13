@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -200,6 +201,9 @@ fun SquareMovementScreen(
                                 containerColor = if (isSelectedTheme) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
                             )
                         ) {
+                            if (isSelectedTheme) {
+                                Icon(imageVector = Icons.Default.Check , contentDescription = "Selected theme")
+                            }
                             Text(
                                 text = themeType.name,
                                 maxLines = 1,
@@ -277,7 +281,8 @@ fun SquareComponent(
             IntOffset(offsetX, offsetY)
         }
         .size(square.size.toDp)
-        .background(MaterialTheme.colorScheme.primary)
+        .clip(RoundedCornerShape(5.dp))
+        .background(MaterialTheme.colorScheme.primaryContainer)
         .pointerInput(Unit) {
             detectDragGestures { change, dragAmount ->
                 val x = dragAmount.x.roundToInt()
