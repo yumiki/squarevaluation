@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.godaddy.android.colorpicker.harmony.ColorHarmonyMode
 import com.godaddy.android.colorpicker.harmony.HarmonyColorPicker
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -47,12 +46,13 @@ import com.interview.square.core.ui.AnimatedNumberFields
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.getViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SquareMovementScreen(
-    viewModel: ISquareMovementViewModel = viewModel<SquareViewModel>(),
+    viewModel: ISquareMovementViewModel = getViewModel<SquareViewModel>(),
 ) {
     val activity = (LocalContext.current as? Activity)
     val themeManager = LocalThemeManager.current
@@ -341,7 +341,7 @@ fun PositionHistoryCard(
     val cardModifier =
         Modifier
             .run {
-                when(LocalConfiguration.current.orientation) {
+                when (LocalConfiguration.current.orientation) {
                     Configuration.ORIENTATION_LANDSCAPE -> {
                         padding(top = 16.dp)
                     }
