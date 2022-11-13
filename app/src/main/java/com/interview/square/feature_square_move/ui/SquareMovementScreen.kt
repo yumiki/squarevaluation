@@ -2,19 +2,16 @@ package com.interview.square.feature_square_move.ui
 
 import android.app.Activity
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
@@ -46,6 +43,7 @@ import com.interview.square.R
 import com.interview.square.core.data.service.LocalThemeManager
 import com.interview.square.core.domain.model.*
 import com.interview.square.core.domain.service.ThemeType
+import com.interview.square.core.ui.AnimatedNumberFields
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
@@ -106,7 +104,11 @@ fun SquareMovementScreen(
             }
         }
     ) { padding ->
-        PositionHistoryCard(history = history)
+        if (history.isNotEmpty()) {
+            PositionHistoryCard(history = history) {
+
+            }
+        }
 
         BoxWithConstraints(
             modifier = Modifier
@@ -302,11 +304,31 @@ fun SquareComponent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PositionHistoryCard(
-    history: List<PositionHistory>
+    history: List<PositionHistory>,
+    compact: Boolean = true,
+    onClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
     // Remember a CoroutineScope to be able to launch
     val coroutineScope = rememberCoroutineScope()
+
+    val lastMovement by remember(history) {
+        derivedStateOf {
+            history.last()
+        }
+    }
+
+    val lastPosition by remember(lastMovement) {
+        derivedStateOf {
+            history.last().position
+        }
+    }
+
+    val lastMovementDate by remember(lastMovement) {
+        derivedStateOf {
+            history.last().getFormattedDate()
+        }
+    }
 
     LaunchedEffect(key1 = history) {
         coroutineScope.launch {
@@ -316,55 +338,89 @@ fun PositionHistoryCard(
         }
     }
 
-    when (LocalConfiguration.current.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> {
-            Card(
-                Modifier
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .heightIn(max = 150.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        0.5f
-                    )
-                )
-            ) {
-                LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
-                    items(history.size) { index ->
-                        val positionRecord = history[index]
-                        Text(
-                            modifier = Modifier.animateItemPlacement(),
-                            text = positionRecord.toString()
-                        )
+    val cardModifier =
+        Modifier
+            .run {
+                when(LocalConfiguration.current.orientation) {
+                    Configuration.ORIENTATION_LANDSCAPE -> {
+                        padding(top = 16.dp)
                     }
+                    else -> {
+                        heightIn(max = 300.dp)
+                        displayCutoutPadding()
+                    }
+                }
+            }
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(CardDefaults.shape)
+            .clickable {
+                onClick()
+            }
+
+    Card(
+        cardModifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                0.5f
+            )
+        )
+    ) {
+        if (compact) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row {
+                    val textAlignmentModifier = Modifier.alignByBaseline()
+                    Text(modifier = textAlignmentModifier, text = "Last movement at: ", style = MaterialTheme.typography.titleLarge)
+                    Text(modifier = textAlignmentModifier, text = lastMovementDate, style = MaterialTheme.typography.titleMedium)
+                }
+                Divider()
+                Text(
+                    text = "Current position :",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row {
+                    when(lastPosition) {
+                        is TwoDimensionPosition -> {
+                            val textAlignmentModifier = Modifier.alignByBaseline()
+                            Text(modifier = textAlignmentModifier, text = "x:", style = MaterialTheme.typography.titleMedium)
+                            AnimatedNumberFields(
+                                modifier = textAlignmentModifier,
+                                value = (lastPosition as TwoDimensionPosition).x,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(modifier = textAlignmentModifier,text = "y:", style = MaterialTheme.typography.titleMedium)
+                            AnimatedNumberFields(
+                                modifier = textAlignmentModifier,
+                                value = (lastPosition as TwoDimensionPosition).y,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+
+                }
+            }
+        } else {
+            LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
+                items(history.size) { index ->
+                    val positionRecord = history[index]
+                    Text(
+                        modifier = Modifier.animateItemPlacement(),
+                        text = positionRecord.toString()
+                    )
                 }
             }
         }
-        else -> {
-            Card(
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .heightIn(max = 300.dp)
-                    .displayCutoutPadding(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        0.5f
-                    )
-                )
-            ) {
-                LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
-                    items(history.size) { index ->
-                        val positionRecord = history[index]
-                        Text(
-                            modifier = Modifier.animateItemPlacement(),
-                            text = positionRecord.toString()
-                        )
-                    }
-                }
-            }
+        Divider()
+        TextButton(
+            modifier = Modifier.align(Alignment.End),
+            onClick = { onClick() }
+        ) {
+            Text(text = "Expand")
         }
     }
-
 }
