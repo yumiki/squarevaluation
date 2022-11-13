@@ -9,7 +9,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.interview.square.core.ui.theme.SquareTheme
 import com.interview.square.feature_square_move.ui.SquareMovementScreen
-import com.interview.square.feature_square_move.ui.SquareViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +20,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SquareMovementScreen(SquareViewModel())
+                    SquareMovementScreen()
                 }
             }
         }

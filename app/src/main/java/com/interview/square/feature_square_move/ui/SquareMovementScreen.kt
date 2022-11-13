@@ -1,6 +1,7 @@
 package com.interview.square.feature_square_move.ui
 
 import android.app.Activity
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.*
@@ -13,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
@@ -21,18 +23,16 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.interview.square.R
-import com.interview.square.core.domain.model.Bounds
-import com.interview.square.core.domain.model.Position
-import com.interview.square.core.domain.model.PositionHistory
-import com.interview.square.core.domain.model.Square
 import com.interview.square.extensions.toDp
 import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.interview.square.core.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SquareMovementScreen(viewModel: ISquareMovementViewModel) {
+fun SquareMovementScreen(viewModel: ISquareMovementViewModel = viewModel<SquareViewModel>()) {
     val activity = (LocalContext.current as? Activity)
 
     val square by viewModel.square.collectAsState()
@@ -72,19 +72,20 @@ fun SquareMovementScreen(viewModel: ISquareMovementViewModel) {
                 // Initialization block
                 viewModel.setBounds(Bounds(0, maxWidth.toPx, 0, maxHeight.toPx))
                 viewModel.updateSquarePosition(
-                    Position.TwoDimensionPosition(
+                    TwoDimensionPosition(
                         maxWidth.div(2).toPx,
                         maxHeight.div(2).toPx
-                    )
+                    ),
+                    true
                 )
             }
 
             SquareComponent(square = square) {
                 when (it) {
-                    is Position.TwoDimensionPosition -> viewModel.updateSquarePosition(
-                        Position.TwoDimensionPosition(
-                            (square.currentPosition as Position.TwoDimensionPosition).x + it.x,
-                            (square.currentPosition as Position.TwoDimensionPosition).y + it.y
+                    is TwoDimensionPosition -> viewModel.updateSquarePosition(
+                        TwoDimensionPosition(
+                            (square.currentPosition as TwoDimensionPosition).x + it.x,
+                            (square.currentPosition as TwoDimensionPosition).y + it.y
                         )
                     )
                 }
@@ -103,12 +104,12 @@ fun SquareComponent(
 ) {
     val offsetX by remember(square) {
         derivedStateOf {
-            (square.currentPosition as Position.TwoDimensionPosition).x
+            (square.currentPosition as TwoDimensionPosition).x
         }
     }
     val offsetY by remember(square) {
         derivedStateOf {
-            (square.currentPosition as Position.TwoDimensionPosition).y
+            (square.currentPosition as TwoDimensionPosition).y
         }
     }
 
@@ -124,7 +125,7 @@ fun SquareComponent(
                 val y = dragAmount.y.roundToInt()
                 change.consume()
                 onDrag(
-                    Position.TwoDimensionPosition(
+                    TwoDimensionPosition(
                         x = x,
                         y = y
                     )
@@ -151,19 +152,40 @@ fun PositionHistoryCard(
         }
     }
 
-    Card(
-        Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .heightIn(max = 300.dp)
-            .displayCutoutPadding(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
-    ) {
-        LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
-            items(history.size) { index ->
-                val positionRecord = history[index]
-                Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+    when (LocalConfiguration.current.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Card(
+                Modifier
+                    .padding(top = 16.dp)
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = 150.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
+            ) {
+                LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
+                    items(history.size) { index ->
+                        val positionRecord = history[index]
+                        Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+                    }
+                }
+            }        }
+        else -> {
+            Card(
+                Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp)
+                    .displayCutoutPadding(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
+            ) {
+                LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
+                    items(history.size) { index ->
+                        val positionRecord = history[index]
+                        Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+                    }
+                }
             }
         }
     }
+
 }
