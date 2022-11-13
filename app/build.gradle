@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-parcelize'
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version"
 }
 
 android {
@@ -20,12 +22,23 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            storeFile file("../testRelease")
+            storePassword "adscien"
+            keyAlias "testRelease"
+            keyPassword "adscien"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -49,11 +62,36 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha03'
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation 'androidx.compose.material3:material3:1.1.0-alpha01'
+    implementation 'com.google.accompanist:accompanist-systemuicontroller:0.27.0'
+    implementation "androidx.compose.ui:ui-util:$compose_version"
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha03'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+
+    //Koin
+    // Koin Core features
+    implementation "io.insert-koin:koin-core:$koin_version"
+    // Koin main features for Android
+    implementation "io.insert-koin:koin-android:$koin_android_version"
+    // Java Compatibility
+    implementation "io.insert-koin:koin-android-compat:$koin_android_version"
+    // Jetpack Compose
+    implementation "io.insert-koin:koin-androidx-compose:$koin_android_compose_version"
+
+    //Color Picker
+    implementation 'com.godaddy.android.colorpicker:compose-color-picker:0.5.1'
+
+    //Icons
+    implementation 'androidx.compose.material:material-icons-core:1.4.0-alpha02'
+    implementation "androidx.compose.material:material-icons-extended:1.3.1"
+
+    //Navigation
+    implementation 'com.google.accompanist:accompanist-navigation-animation:0.27.0'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
