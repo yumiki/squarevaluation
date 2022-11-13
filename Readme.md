@@ -56,4 +56,7 @@ Possible improvement:
 - Improve current position display 
 - Inject theme manager
 - Make home screen floating elements like PositionHistoryCard and floating buttons move when the square is on them 
-# Screenshots
+
+# Screenshot
+![Move the square and display last position](screenshots/home_screen.png "Home screen")
+
