@@ -9,7 +9,7 @@ It contains:
 # Implementation
 The app ui layer is based on Jetpack Compose
 ## Architecture
-The implementation try to follow as much as possible the clean architecture principles.
+The implementation tries to follow as much as possible the clean architecture principles.
 ## Main Libraries
 - Compose - for ui layer
 - Koin - for dependency injection
