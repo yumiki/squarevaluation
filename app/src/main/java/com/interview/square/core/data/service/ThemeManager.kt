@@ -11,9 +11,7 @@ import com.interview.square.core.domain.model.AppColor
 import com.interview.square.core.domain.repository.IThemeRepository
 import com.interview.square.core.domain.service.IThemeManager
 import com.interview.square.core.domain.service.ThemeType
-import com.interview.square.core.ui.theme.DarkColorScheme
 import com.interview.square.core.ui.theme.LightColorScheme
-import com.interview.square.core.ui.theme.UserColorScheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,7 +32,16 @@ class ThemeManager(
     override val defaultTheme: ThemeType =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ThemeType.Dynamic else ThemeType.Default
 
-    private val _currentTheme = MutableStateFlow(defaultTheme)
+    override val defaultColorScheme: ColorScheme = when (defaultTheme) {
+        ThemeType.Dynamic -> {
+            if (_isDarkThemeActive.value) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
+                context
+            )
+        }
+        else -> LightColorScheme
+    }
+
+    private val _currentTheme = MutableSharedFlow<ThemeType>()
 
     override val availableThemes: Set<ThemeType> = buildSet {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -44,11 +51,9 @@ class ThemeManager(
         add(ThemeType.User)
     }
 
-    override val currentTheme: SharedFlow<ThemeType> =
-        _currentTheme.shareIn(externalScope, SharingStarted.WhileSubscribed())
+    override val currentTheme: SharedFlow<ThemeType> = _currentTheme.asSharedFlow()
 
-    override val currentColorScheme: StateFlow<ColorScheme> =
-        combine(isDarkThemeActive, currentTheme) { darkTheme, theme ->
+    override val currentColorScheme: SharedFlow<ColorScheme> = currentTheme.combine(isDarkThemeActive) { theme, darkTheme ->
             Log.v("ThemeManager(current)", "$darkTheme, $theme")
             when (theme) {
                 ThemeType.Dynamic -> {
@@ -56,23 +61,23 @@ class ThemeManager(
                         context
                     )
                 }
-                ThemeType.User -> UserColorScheme
+                ThemeType.User -> themeRepository.getUserColorScheme().toColorScheme()
                 else -> LightColorScheme
             }
-        }.stateIn(
+        }.shareIn(
             externalScope,
-            SharingStarted.Eagerly,
-            if (isDarkThemeActive.value) DarkColorScheme else LightColorScheme
+            SharingStarted.WhileSubscribed()
         )
 
-    override fun setTheme(themeType: ThemeType) {
+    override suspend fun setTheme(themeType: ThemeType) {
         Log.v("ThemeManager", "From instance $this")
-        _currentTheme.value = themeType
+        _currentTheme.emit(themeType)
     }
 
-    override fun setPrimaryColorForUserTheme(color: AppColor) {
+    override fun setPrimaryColorForUserTheme(color: AppColor, variantColor: AppColor?) {
         externalScope.launch {
-            themeRepository.updatePrimaryUserColorScheme(color)
+            themeRepository.updatePrimaryUserColorScheme(color, variantColor)
+            setTheme(ThemeType.User)
         }
     }
 

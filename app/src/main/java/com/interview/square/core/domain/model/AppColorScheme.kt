@@ -1,5 +1,6 @@
 package com.interview.square.core.domain.model
 
+import androidx.compose.material3.ColorScheme
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -33,4 +34,69 @@ data class AppColorScheme(
     val outline: AppColor,
     val outlineVariant: AppColor,
     val scrim: AppColor,
+) {
+    fun toColorScheme(): ColorScheme =
+        ColorScheme(
+            primary.toColor(),
+            onPrimary.toColor(),
+            primaryContainer.toColor(),
+            onPrimaryContainer.toColor(),
+            inversePrimary.toColor(),
+            secondary.toColor(),
+            onSecondary.toColor(),
+            secondaryContainer.toColor(),
+            onSecondaryContainer.toColor(),
+            tertiary.toColor(),
+            onTertiary.toColor(),
+            tertiaryContainer.toColor(),
+            onTertiaryContainer.toColor(),
+            background.toColor(),
+            onBackground.toColor(),
+            surface.toColor(),
+            onSurface.toColor(),
+            surfaceVariant.toColor(),
+            onSurfaceVariant.toColor(),
+            surfaceTint.toColor(),
+            inverseSurface.toColor(),
+            inverseOnSurface.toColor(),
+            error.toColor(),
+            onError.toColor(),
+            errorContainer.toColor(),
+            onErrorContainer.toColor(),
+            outline.toColor(),
+            outlineVariant.toColor(),
+            scrim.toColor(),
+        )
+}
+
+fun ColorScheme.toAppColor() = AppColorScheme(
+    primary.toAppColor(),
+    onPrimary.toAppColor(),
+    primaryContainer.toAppColor(),
+    onPrimaryContainer.toAppColor(),
+    inversePrimary.toAppColor(),
+    secondary.toAppColor(),
+    onSecondary.toAppColor(),
+    secondaryContainer.toAppColor(),
+    onSecondaryContainer.toAppColor(),
+    tertiary.toAppColor(),
+    onTertiary.toAppColor(),
+    tertiaryContainer.toAppColor(),
+    onTertiaryContainer.toAppColor(),
+    background.toAppColor(),
+    onBackground.toAppColor(),
+    surface.toAppColor(),
+    onSurface.toAppColor(),
+    surfaceVariant.toAppColor(),
+    onSurfaceVariant.toAppColor(),
+    surfaceTint.toAppColor(),
+    inverseSurface.toAppColor(),
+    inverseOnSurface.toAppColor(),
+    error.toAppColor(),
+    onError.toAppColor(),
+    errorContainer.toAppColor(),
+    onErrorContainer.toAppColor(),
+    outline.toAppColor(),
+    outlineVariant.toAppColor(),
+    scrim.toAppColor(),
 )

@@ -9,6 +9,8 @@ data class AppColor(
     val blue: Float,
     val green: Float,
     val alpha: Float
-)
+) {
+    fun toColor(): Color = Color(red, green, blue, alpha)
+}
 
 fun Color.toAppColor() = AppColor(red, blue, green, alpha)

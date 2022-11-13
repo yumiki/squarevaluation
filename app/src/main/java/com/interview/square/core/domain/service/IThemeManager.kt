@@ -10,27 +10,29 @@ import kotlinx.coroutines.flow.StateFlow
 interface IThemeManager {
     val isDarkThemeActive: StateFlow<Boolean>
     val defaultTheme: ThemeType
+    val defaultColorScheme: ColorScheme
     val availableThemes: Set<ThemeType>
     val currentTheme: SharedFlow<ThemeType>
-    val currentColorScheme: StateFlow<ColorScheme>
+    val currentColorScheme: SharedFlow<ColorScheme>
 
-    fun setTheme(themeType: ThemeType)
-    fun setPrimaryColorForUserTheme(color: AppColor)
+    suspend fun setTheme(themeType: ThemeType)
+    fun setPrimaryColorForUserTheme(color: AppColor, variantColor: AppColor? = null)
     fun notifyNightModeChange(darkTheme: Boolean)
 }
 
 object DefaultThemeManager: IThemeManager {
     override val isDarkThemeActive: StateFlow<Boolean> = MutableStateFlow(false)
     override val defaultTheme: ThemeType = ThemeType.Default
+    override val defaultColorScheme: ColorScheme = LightColorScheme
     override val availableThemes: Set<ThemeType> = setOf(ThemeType.Dynamic, ThemeType.Default, ThemeType.User)
     override val currentTheme: SharedFlow<ThemeType> = MutableStateFlow(ThemeType.Dynamic)
-    override val currentColorScheme: StateFlow<ColorScheme> = MutableStateFlow(LightColorScheme)
+    override val currentColorScheme: SharedFlow<ColorScheme> = MutableStateFlow(defaultColorScheme)
 
-    override fun setTheme(themeType: ThemeType) {
+    override suspend fun setTheme(themeType: ThemeType) {
         TODO("Not yet implemented")
     }
 
-    override fun setPrimaryColorForUserTheme(color: AppColor) {
+    override fun setPrimaryColorForUserTheme(color: AppColor, variantColor: AppColor?) {
         TODO("Not yet implemented")
     }
 

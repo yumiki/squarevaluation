@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,7 +22,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -30,9 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.godaddy.android.colorpicker.harmony.ColorHarmonyMode
+import com.godaddy.android.colorpicker.harmony.HarmonyColorPicker
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.interview.square.DEFAULT_SQUARE_SIZE_IN_PIXEL
 import com.interview.square.R
@@ -44,13 +50,14 @@ import com.interview.square.extensions.toPx
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SquareMovementScreen(
     viewModel: ISquareMovementViewModel = viewModel<SquareViewModel>(),
 ) {
     val activity = (LocalContext.current as? Activity)
     val themeManager = LocalThemeManager.current
+    val coroutineScope = rememberCoroutineScope()
 
     val square by viewModel.square.collectAsState()
     val history by viewModel.positionHistory.collectAsState()
@@ -76,12 +83,16 @@ fun SquareMovementScreen(
             Column(
                 horizontalAlignment = Alignment.End
             ) {
-                SmallFloatingActionButton(onClick = {
-                    viewModel.putInTheMiddle()
-                },
+                SmallFloatingActionButton(
+                    onClick = {
+                        viewModel.putInTheMiddle()
+                    },
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.8f)
                 ) {
-                    Icon(imageVector = Icons.Default.Refresh, contentDescription = "Put in the middle")
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Put in the middle"
+                    )
                 }
                 FloatingActionButton(onClick = {
                     settingDialogIsVisible = true
@@ -129,7 +140,12 @@ fun SquareMovementScreen(
     }
 
     AnimatedVisibility(settingDialogIsVisible) {
-        AlertDialog(onDismissRequest = {
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .wrapContentHeight(), onDismissRequest = {
             settingDialogIsVisible = false
         }, text = {
             val squareSize by remember(square) {
@@ -137,7 +153,7 @@ fun SquareMovementScreen(
                     square.size
                 }
             }
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Square properties", style = MaterialTheme.typography.titleLarge)
                 Divider()
                 Text(text = "Change size")
@@ -156,33 +172,62 @@ fun SquareMovementScreen(
                 Text("Change theme", style = MaterialTheme.typography.titleLarge)
                 Divider()
                 LazyRow {
-                    items(items = themeManager.availableThemes.toList(), key= {
+                    items(items = themeManager.availableThemes.toList(), key = {
                         it
                     }) { themeType ->
                         val isSelectedTheme = currentTheme == themeType
                         val index = themeManager.availableThemes.indexOf(themeType)
                         val shape = when (index) {
-                            0 -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
-                            themeManager.availableThemes.size - 1 -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
+                            0 -> RoundedCornerShape(
+                                topStartPercent = 50,
+                                bottomStartPercent = 50
+                            )
+                            themeManager.availableThemes.size - 1 -> RoundedCornerShape(
+                                topEndPercent = 50,
+                                bottomEndPercent = 50
+                            )
                             else -> RoundedCornerShape(0)
                         }
                         OutlinedButton(
                             modifier = Modifier.offset((-1 * index).dp, 0.dp),
                             onClick = {
-                                themeManager.setTheme(themeType)
+                                coroutineScope.launch {
+                                    themeManager.setTheme(themeType)
+                                }
                             },
                             shape = shape,
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (isSelectedTheme) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent
                             )
                         ) {
-                            Text(text = themeType.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                text = themeType.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
                 AnimatedVisibility(visible = currentTheme == ThemeType.User) {
-                    ColorPicker(MaterialTheme.colorScheme.primary) {
-                        themeManager.setPrimaryColorForUserTheme(it.toAppColor())
+                    Column {
+                        ColorPicker { color, variants ->
+                            themeManager.setPrimaryColorForUserTheme(
+                                color.toAppColor(),
+                                variants.first().toAppColor()
+                            )
+                        }
+                        Row {
+                            Box(
+                                Modifier
+                                    .clip(CircleShape)
+                                    .size(28.dp)
+                                    .background(MaterialTheme.colorScheme.primary))
+                            Box(
+                                Modifier
+                                    .clip(CircleShape)
+                                    .size(28.dp)
+                                    .background(MaterialTheme.colorScheme.primaryContainer))
+                        }
                     }
                 }
             }
@@ -199,7 +244,15 @@ fun SquareMovementScreen(
 }
 
 @Composable
-fun ColorPicker(value: Color, onColorSelected: (Color) -> Unit) {
+fun ColorPicker(value: Color = MaterialTheme.colorScheme.primary, onColorSelected: (Color, List<Color>) -> Unit) {
+    HarmonyColorPicker(
+        modifier = Modifier.size(250.dp),
+        harmonyMode = ColorHarmonyMode.MONOCHROMATIC,
+        color = value
+    ) {
+        onColorSelected(it.toColor(), it.getMonochromaticColors().map { color -> color.toColor() })
+    }
+
 }
 
 @Composable
@@ -266,15 +319,23 @@ fun PositionHistoryCard(
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth()
                     .heightIn(max = 150.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                        0.5f
+                    )
+                )
             ) {
                 LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
                     items(history.size) { index ->
                         val positionRecord = history[index]
-                        Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+                        Text(
+                            modifier = Modifier.animateItemPlacement(),
+                            text = positionRecord.toString()
+                        )
                     }
                 }
-            }        }
+            }
+        }
         else -> {
             Card(
                 Modifier
@@ -282,12 +343,19 @@ fun PositionHistoryCard(
                     .fillMaxWidth()
                     .heightIn(max = 300.dp)
                     .displayCutoutPadding(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.5f))
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                        0.5f
+                    )
+                )
             ) {
                 LazyColumn(contentPadding = PaddingValues(16.dp), state = listState) {
                     items(history.size) { index ->
                         val positionRecord = history[index]
-                        Text(modifier = Modifier.animateItemPlacement(), text = positionRecord.toString())
+                        Text(
+                            modifier = Modifier.animateItemPlacement(),
+                            text = positionRecord.toString()
+                        )
                     }
                 }
             }
